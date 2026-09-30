@@ -223,20 +223,6 @@ function renderHeaderSection(
     ? `
       <g transform="translate(${cardWidth / 2}, 0)">
         <title>${fullName} (@${fullLogin})</title>
-        <g opacity="0.6">
-          <rect x="${-cardWidth / 2 + 40}" y="-22" width="22" height="2" fill="${
-            theme.accent
-          }"/>
-          <rect x="${-cardWidth / 2 + 40}" y="-22" width="2" height="22" fill="${
-            theme.accent
-          }"/>
-          <rect x="${cardWidth / 2 - 62}" y="-22" width="22" height="2" fill="${
-            theme.accent
-          }"/>
-          <rect x="${cardWidth / 2 - 42}" y="-22" width="2" height="22" fill="${
-            theme.accent
-          }"/>
-        </g>
         <text class="mi-name" x="0" y="0" text-anchor="middle" font-size="30" font-weight="800" fill="${
           theme.title
         }" font-family="${FONT_FAMILY}" letter-spacing="-0.5">
