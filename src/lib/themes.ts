@@ -184,7 +184,6 @@ ocean_radical: {
   },
 };
 
-// Legacy aliases: keep old embed URLs working after the rename.
 themes.satria = themes.monochrome;
 themes.satria_light = themes.monochrome_light;
 

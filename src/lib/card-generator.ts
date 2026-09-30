@@ -27,10 +27,6 @@ const SECTION_GAP = 20;
 const CARD_RADIUS = 6;
 const OUTER_RADIUS = 8;
 
-// Entrance motion for every theme. Declarative CSS only (no JS), so it
-// plays inside README <img> embeds. Opacity-only fades are used on
-// transformed groups; translate/scale keyframes only target elements
-// without a transform attribute to avoid overriding their placement.
 const ANIMATION_STYLE = `
   <style>
     .mi-name { animation: mi-nameIn 0.9s ease-out both; }
@@ -68,6 +64,14 @@ function getCardUid(stats: GitHubStats, theme: ThemeColors, options: CardOptions
 function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
   return text.slice(0, Math.max(0, maxLength - 1)).trimEnd() + "…";
+}
+
+function truncateWords(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+  const cut = text.slice(0, Math.max(0, maxLength - 1)).trimEnd();
+  const lastSpace = cut.lastIndexOf(" ");
+  const base = lastSpace > 0 ? cut.slice(0, lastSpace) : cut;
+  return base.trimEnd() + "…";
 }
 
 function round1(value: number): number {
@@ -153,7 +157,7 @@ function renderHeaderSection(
   const hasDistinctName =
     rawName !== "" && rawName.toLowerCase() !== rawLogin.toLowerCase();
 
-  const displayName = truncateText(rawName || rawLogin, 28).toUpperCase();
+  const displayName = truncateWords(rawName || rawLogin, 28).toUpperCase();
   const name = escapeHtml(displayName);
   const fullName = escapeHtml(rawName || rawLogin);
   const login = escapeHtml(truncateText(rawLogin, 24));
@@ -163,7 +167,7 @@ function renderHeaderSection(
   const fullLocation = rawLocation ? escapeHtml(rawLocation) : "";
 
   const metaParts = [`@${rawLogin.toUpperCase()}`];
-  if (rawLocation) metaParts.push(truncateText(rawLocation, 24).toUpperCase());
+  if (rawLocation) metaParts.push(truncateWords(rawLocation, 28).toUpperCase());
   metaParts.push(`JOINED ${formatDateFull(stats.accountCreatedAt).toUpperCase()}`);
   const metaLine = escapeHtml(metaParts.join("   ·   "));
 
