@@ -1,6 +1,34 @@
 import { ThemeColors } from '@/types/github';
 
 export const themes: Record<string, ThemeColors> = {
+  satria: {
+    background: '#0A0A0A',
+    backgroundGradient: 'linear-gradient(135deg, #0A0A0A 0%, #0A0A0A 100%)',
+    cardBackground: '#0A0A0A',
+    border: '#262626',
+    title: '#ffffff',
+    text: '#ffffff',
+    textSecondary: '#a3a3a3',
+    accent: '#ffffff',
+    accentSecondary: '#a3a3a3',
+    iconColor: '#ffffff',
+    contributionLevels: ['#1c1c1c', '#404040', '#737373', '#b5b5b5', '#ffffff'],
+  },
+
+  satria_light: {
+    background: '#fafafa',
+    backgroundGradient: 'linear-gradient(135deg, #fafafa 0%, #fafafa 100%)',
+    cardBackground: '#ffffff',
+    border: '#e5e5e5',
+    title: '#0a0a0a',
+    text: '#0a0a0a',
+    textSecondary: '#737373',
+    accent: '#0a0a0a',
+    accentSecondary: '#737373',
+    iconColor: '#0a0a0a',
+    contributionLevels: ['#f0f0f0', '#d4d4d4', '#a3a3a3', '#525252', '#0a0a0a'],
+  },
+
   dark: {
     background: '#0d1117',
     backgroundGradient: 'linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1117 100%)',
@@ -157,5 +185,5 @@ ocean_radical: {
 };
 
 export function getTheme(themeName: string): ThemeColors {
-  return themes[themeName] || themes.github_dark;
+  return themes[themeName] || themes.satria;
 }

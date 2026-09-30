@@ -21,7 +21,7 @@ function generateETag(content: string): string {
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const username = searchParams.get('username');
-  const themeName = searchParams.get('theme') || 'github_dark';
+  const themeName = searchParams.get('theme') || 'satria';
   const showGraph = searchParams.get('graph') !== 'false';
   const showLanguages = searchParams.get('languages') !== 'false';
   const showStreak = searchParams.get('streak') !== 'false';
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
   if (!username) {
     return new NextResponse(
-      generateErrorCard('Username is required', getTheme('github_dark')),
+      generateErrorCard('Username is required', getTheme('satria')),
       {
         status: 400,
         headers: {
@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
     const errorMessage = error instanceof Error ? error.message : 'Failed to generate stats';
     
     return new NextResponse(
-      generateErrorCard(errorMessage, getTheme('github_dark')),
+      generateErrorCard(errorMessage, getTheme('satria')),
       {
         status: 500,
         headers: {
@@ -154,15 +154,10 @@ function generateErrorCard(message: string, theme: ReturnType<typeof getTheme>):
 <svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="GitHub Insights error" width="500" height="132" viewBox="0 0 500 132">
   <title>GitHub Insights error</title>
   <desc>${safeMessage}</desc>
-  <rect x="1" y="1" width="498" height="130" rx="14" fill="${theme.cardBackground}" stroke="#f85149" stroke-width="1.5"/>
-  <g transform="translate(250, 32)">
-    <circle cx="0" cy="0" r="16" fill="#f85149" opacity="0.12"/>
-    <g transform="translate(-10, -10) scale(1.25)">
-      <path fill="#f85149" d="M8 1.5a.75.75 0 0 1 .673.418l5.25 10.5a.75.75 0 0 1-1.346.672L8 3.933 3.423 13.09a.75.75 0 0 1-1.346-.672l5.25-10.5A.75.75 0 0 1 8 1.5ZM8 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z"/>
-    </g>
-  </g>
-  <text x="250" y="72" text-anchor="middle" font-size="16" font-weight="700" fill="#f85149" font-family="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" letter-spacing="0.2">Request failed</text>
-  <text x="250" y="96" text-anchor="middle" font-size="13" font-weight="500" fill="${theme.text}" font-family="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <rect x="0.5" y="0.5" width="499" height="131" rx="8" fill="${theme.background}" stroke="${theme.border}" stroke-width="1"/>
+  <text x="250" y="52" text-anchor="middle" font-size="16" font-weight="700" fill="${theme.title}" font-family="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" letter-spacing="-0.3">Request failed.</text>
+  <rect x="219" y="64" width="62" height="2" rx="1" fill="#f85149"/>
+  <text x="250" y="96" text-anchor="middle" font-size="11" font-weight="400" fill="${theme.textSecondary}" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" letter-spacing="1">
     ${safeMessage}
   </text>
 </svg>

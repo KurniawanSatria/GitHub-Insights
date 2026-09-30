@@ -25,7 +25,7 @@
 - 📈 **Contribution Graph** - Visual representation of your activity with monthly breakdowns
 - 🗣️ **Top Languages** - Most used programming languages with visual percentages
 - 🙈 **Language Filtering** - Hide specific languages from your stats so percentages only reflect what matters to you
-- 🎨 **Multiple Themes** - 8 beautiful card themes to choose from (GitHub Light, GitHub Dark, Radical, Tokyo Night, Dracula, Synthwave, Ocean, Neo Green)
+- 🎨 **Multiple Themes** - 11 monochrome-first card themes, defaulting to Satria (pure black-and-white minimal to match clean profile READMEs)
 - 🌗 **Site Theme Toggle** - Switch the web UI between Light, Dark, and System mode with persistent preference
 - 📥 **Download Options** - Export your stats card as SVG, PNG, or JPG directly from the UI
 - ⚡ **Fast & Optimized** - Edge runtime with intelligent caching for quick loads
@@ -51,7 +51,7 @@ Replace `YOUR_USERNAME` with your GitHub username.
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `username` | Required | Your GitHub username |
-| `theme` | `github_dark` | Card theme |
+| `theme` | `satria` | Card theme |
 | `profile` | `true` | Show name & username |
 | `header` | `true` | Show monthly contribution chart |
 | `summary` | `true` | Show summary info (contributions, repos, join date) |
@@ -83,6 +83,8 @@ You can exclude certain languages so they don't appear in the languages section 
 
 | Theme | Preview |
 |-------|---------|
+| `satria` (default) | ![Satria](https://yourinsights.vercel.app/api/insight?username=mojombo&theme=satria&graph=false&languages=false&streak=false&stats=false&header=false&summary=false&profile=true) |
+| `satria_light` | ![Satria Light](https://yourinsights.vercel.app/api/insight?username=mojombo&theme=satria_light&graph=false&languages=false&streak=false&stats=false&header=false&summary=false&profile=true) |
 | `github_dark` | ![GitHub Dark](https://yourinsights.vercel.app/api/insight?username=mojombo&theme=github_dark&graph=false&languages=false&streak=false&stats=false&header=false&summary=false&profile=true) |
 | `github_light` | ![GitHub Light](https://yourinsights.vercel.app/api/insight?username=mojombo&theme=github_light&graph=false&languages=false&streak=false&stats=false&header=false&summary=false&profile=true) |
 | `radical` | ![Radical](https://yourinsights.vercel.app/api/insight?username=mojombo&theme=radical&graph=false&languages=false&streak=false&stats=false&header=false&summary=false&profile=true) |
