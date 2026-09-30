@@ -27,6 +27,34 @@ const SECTION_GAP = 20;
 const CARD_RADIUS = 6;
 const OUTER_RADIUS = 8;
 
+// Entrance motion for every theme. Declarative CSS only (no JS), so it
+// plays inside README <img> embeds. Opacity-only fades are used on
+// transformed groups; translate/scale keyframes only target elements
+// without a transform attribute to avoid overriding their placement.
+const ANIMATION_STYLE = `
+  <style>
+    .mi-name { animation: mi-nameIn 0.9s ease-out both; }
+    .mi-underline { animation: mi-barX 0.9s ease-out 0.3s both; transform-box: fill-box; }
+    .mi-underline-center { transform-origin: center; }
+    .mi-underline-left { transform-origin: left center; }
+    .mi-meta { animation: mi-fadeUp 0.9s ease-out 0.5s both; }
+    .mi-card { animation: mi-fade 0.7s ease-out both; }
+    .mi-d1 { animation-delay: 0.15s; }
+    .mi-d2 { animation-delay: 0.25s; }
+    .mi-d3 { animation-delay: 0.35s; }
+    .mi-d4 { animation-delay: 0.45s; }
+    .mi-chart { animation: mi-fade 1.1s ease-in-out 0.4s both; }
+    .mi-bar { animation: mi-barX 1s ease-out 0.5s both; transform-box: fill-box; transform-origin: left center; }
+    @keyframes mi-nameIn { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
+    @keyframes mi-fadeUp { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
+    @keyframes mi-fade { 0% { opacity: 0; } 100% { opacity: 1; } }
+    @keyframes mi-barX { 0% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
+    @media (prefers-reduced-motion: reduce) {
+      .mi-name, .mi-underline, .mi-meta, .mi-card, .mi-chart, .mi-bar { animation: none; }
+    }
+  </style>
+`;
+
 function getCardUid(stats: GitHubStats, theme: ThemeColors, options: CardOptions): string {
   const base = `${stats.user.login}|${theme.accent}|${theme.cardBackground}|${options.showGraph}|${options.showLanguages}|${options.showStreak}|${options.showStats}|${options.showHeader}|${options.showSummary}|${options.showProfile}`;
   let h1 = 0xdeadbeef;
@@ -205,15 +233,15 @@ function renderHeaderSection(
             theme.accent
           }"/>
         </g>
-        <text x="0" y="0" text-anchor="middle" font-size="30" font-weight="800" fill="${
+        <text class="mi-name" x="0" y="0" text-anchor="middle" font-size="30" font-weight="800" fill="${
           theme.title
         }" font-family="${FONT_FAMILY}" letter-spacing="-0.5">
           ${hasDistinctName ? name : `@${login.toUpperCase()}`}
         </text>
-        <rect x="-160" y="14" width="320" height="2" rx="1" fill="${
+        <rect class="mi-underline mi-underline-center" x="-160" y="14" width="320" height="2" rx="1" fill="${
           theme.accent
         }"/>
-        <text x="0" y="44" text-anchor="middle" font-size="11" font-weight="400" fill="${
+        <text class="mi-meta" x="0" y="44" text-anchor="middle" font-size="11" font-weight="400" fill="${
           theme.textSecondary
         }" font-family="${MONO_FONT}" letter-spacing="2">
           ${metaLine}
@@ -347,7 +375,7 @@ function renderHeaderSection(
         </defs>
         
         <path d="${areaPath}" fill="url(#${headerGradientId})" />
-        <path d="${linePath}" fill="none" stroke="${
+        <path class="mi-chart" d="${linePath}" fill="none" stroke="${
         theme.accent
       }" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
         ${dotsSvg}
@@ -450,14 +478,14 @@ function renderStatsCard(
     }" font-family="${FONT_FAMILY}" text-anchor="end" letter-spacing="0.1">${item.value.toLocaleString()}</text></g>`;
   });
 
-  const svg = `<g transform="translate(${startX}, ${startY})">
+  const svg = `<g class="mi-card mi-d1" transform="translate(${startX}, ${startY})">
       <rect x="0" y="0" width="377" height="204" rx="${CARD_RADIUS}" fill="${
         theme.cardBackground
       }" stroke="${theme.border}" stroke-width="1"/>
       <g transform="translate(24, 26)"><text x="0" y="0" font-size="18" font-weight="700" fill="${
     theme.title
   }" font-family="${FONT_FAMILY}" letter-spacing="-0.5">GitHub Stats.</text>
-      <rect x="0" y="8" width="72" height="2" rx="1" fill="${theme.accent}"/></g>
+      <rect class="mi-underline mi-underline-left" x="0" y="8" width="72" height="2" rx="1" fill="${theme.accent}"/></g>
       <g transform="translate(24, 66)">${statsSvgParts.join("")}</g>
       <g transform="translate(290, 62)">
         <circle cx="36" cy="36" r="44" fill="${theme.accent}" opacity="0.06"/>
@@ -562,20 +590,20 @@ function renderLanguagesCard(
     }
   }
 
-  const svg = `<g transform="translate(${startX}, ${startY})">
+  const svg = `<g class="mi-card mi-d2" transform="translate(${startX}, ${startY})">
       <rect x="0" y="0" width="377" height="204" rx="${CARD_RADIUS}" fill="${
         theme.cardBackground
       }" stroke="${theme.border}" stroke-width="1"/>
       <g transform="translate(24, 26)"><text x="0" y="0" font-size="18" font-weight="700" fill="${
     theme.title
   }" font-family="${FONT_FAMILY}" letter-spacing="-0.5">Most Used Languages.</text>
-      <rect x="0" y="8" width="72" height="2" rx="1" fill="${theme.accent}"/></g>
+      <rect class="mi-underline mi-underline-left" x="0" y="8" width="72" height="2" rx="1" fill="${theme.accent}"/></g>
       <g transform="translate(24, 62)">
         <defs><clipPath id="${clipId}"><rect x="0" y="0" width="${barWidth}" height="${barHeight}" rx="${borderRadius}"/></clipPath></defs>
         <rect x="0" y="0" width="${barWidth}" height="${barHeight}" rx="${borderRadius}" fill="${
     theme.background
   }"/>
-        <g clip-path="url(#${clipId})">${segmentsSvg}</g>
+        <g class="mi-bar" clip-path="url(#${clipId})">${segmentsSvg}</g>
       </g>
       <g transform="translate(24, 92)">${leftLangsSvg}${rightLangsSvg}</g>
     </g>`;
@@ -616,7 +644,7 @@ function renderStreakSection(
   const joinedRange = `${formatDateFull(accountCreatedAt)} - Present`;
 
   const svg = `
-    <g transform="translate(40, ${startY})">
+    <g class="mi-card mi-d3" transform="translate(40, ${startY})">
       <g transform="translate(0, 0)">
         <title>Total contributions: ${totalContributionsAllTime.toLocaleString()}</title>
         <rect x="0" y="0" width="${cardWidth3}" height="144" rx="${CARD_RADIUS}" fill="${
@@ -807,7 +835,7 @@ function renderContributionLineGraph(
 
   const linePath = linePathParts.join(" ");
 
-  const svg = `<g transform="translate(40, ${startY})">
+  const svg = `<g class="mi-card mi-d4" transform="translate(40, ${startY})">
       <rect x="0" y="0" width="${innerWidth}" height="${
     graphHeight + 84
   }" rx="${CARD_RADIUS}" fill="${theme.cardBackground}" stroke="${
@@ -816,7 +844,7 @@ function renderContributionLineGraph(
       <g transform="translate(24, 26)"><text x="0" y="0" font-size="18" font-weight="700" fill="${
     theme.title
   }" font-family="${FONT_FAMILY}" letter-spacing="-0.5">Contribution Activity.</text>
-      <rect x="0" y="8" width="72" height="2" rx="1" fill="${theme.accent}"/>
+      <rect class="mi-underline mi-underline-left" x="0" y="8" width="72" height="2" rx="1" fill="${theme.accent}"/>
       <text x="0" y="30" font-size="10" font-weight="400" fill="${
     theme.textSecondary
   }" font-family="${MONO_FONT}" letter-spacing="2">DAILY · ${escapeHtml(monthLabel.toUpperCase())}</text></g>
@@ -851,7 +879,7 @@ function renderContributionLineGraph(
     theme.accent
   };stop-opacity:0.02"/></linearGradient></defs>
         <path d="${linePath} L ${graphWidth} ${graphHeight} L 0 ${graphHeight} Z" fill="url(#${graphGradientId})"/>
-        <path d="${linePath}" fill="none" stroke="${
+        <path class="mi-chart" d="${linePath}" fill="none" stroke="${
     theme.accent
   }" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
         ${dataPointsSvg}
@@ -921,6 +949,7 @@ export function generateInsightCard(
 <svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="GitHub Insights for @${safeLogin}" width="${cardWidth}" height="${cardHeight}" viewBox="0 0 ${cardWidth} ${cardHeight}">
   <title>GitHub Insights for @${safeLogin}</title>
   <desc>${escapeHtml(summaryDesc)}</desc>
+  ${ANIMATION_STYLE}
   <rect x="0.5" y="0.5" width="${cardWidth - 1}" height="${
     cardHeight - 1
   }" rx="${OUTER_RADIUS}" fill="${theme.background}" stroke="${theme.border}" stroke-width="1"/>

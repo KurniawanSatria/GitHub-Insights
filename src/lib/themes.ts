@@ -1,7 +1,7 @@
 import { ThemeColors } from '@/types/github';
 
 export const themes: Record<string, ThemeColors> = {
-  satria: {
+  monochrome: {
     background: '#0A0A0A',
     backgroundGradient: 'linear-gradient(135deg, #0A0A0A 0%, #0A0A0A 100%)',
     cardBackground: '#0A0A0A',
@@ -15,7 +15,7 @@ export const themes: Record<string, ThemeColors> = {
     contributionLevels: ['#1c1c1c', '#404040', '#737373', '#b5b5b5', '#ffffff'],
   },
 
-  satria_light: {
+  monochrome_light: {
     background: '#fafafa',
     backgroundGradient: 'linear-gradient(135deg, #fafafa 0%, #fafafa 100%)',
     cardBackground: '#ffffff',
@@ -184,6 +184,10 @@ ocean_radical: {
   },
 };
 
+// Legacy aliases: keep old embed URLs working after the rename.
+themes.satria = themes.monochrome;
+themes.satria_light = themes.monochrome_light;
+
 export function getTheme(themeName: string): ThemeColors {
-  return themes[themeName] || themes.satria;
+  return themes[themeName] || themes.monochrome;
 }

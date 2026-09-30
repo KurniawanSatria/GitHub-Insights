@@ -41,8 +41,8 @@ interface CardThemeOption {
 }
 
 const CARD_THEMES: CardThemeOption[] = [
-  { id: 'satria', name: 'Satria', bgColor: '#0A0A0A', cardColor: '#0A0A0A', accentColor: '#ffffff', textColor: '#ffffff' },
-  { id: 'satria_light', name: 'Satria Light', bgColor: '#fafafa', cardColor: '#ffffff', accentColor: '#0a0a0a', textColor: '#0a0a0a' },
+  { id: 'monochrome', name: 'Monochrome', bgColor: '#0A0A0A', cardColor: '#0A0A0A', accentColor: '#ffffff', textColor: '#ffffff' },
+  { id: 'monochrome_light', name: 'Monochrome Light', bgColor: '#fafafa', cardColor: '#ffffff', accentColor: '#0a0a0a', textColor: '#0a0a0a' },
   { id: 'github_dark', name: 'GitHub Dark', bgColor: '#0d1117', cardColor: '#161b22', accentColor: '#58a6ff', textColor: '#c9d1d9' },
   { id: 'github_light', name: 'GitHub Light', bgColor: '#f6f8fa', cardColor: '#ffffff', accentColor: '#0550ae', textColor: '#24292f' },
   { id: 'tokyonight', name: 'Tokyo Night', bgColor: '#1a1b26', cardColor: '#24283b', accentColor: '#70a5fd', textColor: '#a9b1d6' },
@@ -68,7 +68,7 @@ function GitHubLogo({ size = 18 }: { size?: number }) {
 export default function Home() {
   const [username, setUsername] = useState('');
   const [generatedUsername, setGeneratedUsername] = useState('');
-  const [selectedTheme, setSelectedTheme] = useState('satria');
+  const [selectedTheme, setSelectedTheme] = useState('monochrome');
   const [showGraph, setShowGraph] = useState(true);
   const [showLanguages, setShowLanguages] = useState(true);
   const [showStreak, setShowStreak] = useState(true);
@@ -108,8 +108,8 @@ export default function Home() {
         const currentMode = currentSaved && ['light', 'dark', 'system'].includes(currentSaved) ? currentSaved : 'system';
         if (currentMode === 'system') {
           setSelectedTheme((prev) => {
-            if (prev === 'satria' && !e.matches) return 'satria_light';
-            if (prev === 'satria_light' && e.matches) return 'satria';
+            if (prev === 'monochrome' && !e.matches) return 'monochrome_light';
+            if (prev === 'monochrome_light' && e.matches) return 'monochrome';
             return prev;
           });
         }
@@ -124,7 +124,7 @@ export default function Home() {
 
       const isSystemDark = mql.matches;
       const effectiveDark = activeSiteTheme === 'system' ? isSystemDark : activeSiteTheme === 'dark';
-      setSelectedTheme(effectiveDark ? 'satria' : 'satria_light');
+      setSelectedTheme(effectiveDark ? 'monochrome' : 'monochrome_light');
 
       try {
         const savedSearches = localStorage.getItem('github_insights_recent_searches');
@@ -234,8 +234,8 @@ export default function Home() {
     setSiteTheme(mode);
     const willBeDark = mode === 'system' ? systemPrefersDark : mode === 'dark';
     setSelectedTheme((prev) => {
-      if (prev === 'satria' && !willBeDark) return 'satria_light';
-      if (prev === 'satria_light' && willBeDark) return 'satria';
+      if (prev === 'monochrome' && !willBeDark) return 'monochrome_light';
+      if (prev === 'monochrome_light' && willBeDark) return 'monochrome';
       return prev;
     });
   };
