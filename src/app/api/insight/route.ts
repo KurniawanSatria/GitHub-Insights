@@ -144,15 +144,26 @@ export async function OPTIONS() {
 }
 
 function generateErrorCard(message: string, theme: ReturnType<typeof getTheme>): string {
+  const safeMessage = message
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .slice(0, 120);
   return `
-<svg xmlns="http://www.w3.org/2000/svg" width="500" height="120" viewBox="0 0 500 120">
-  <rect x="0" y="0" width="500" height="120" rx="12" fill="${theme.background}"/>
-  <rect x="0" y="0" width="500" height="120" rx="12" fill="none" stroke="#f85149" stroke-width="2"/>
-  <text x="250" y="50" text-anchor="middle" font-size="18" font-weight="bold" fill="#f85149" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji'">
-    ⚠️ Error
-  </text>
-  <text x="250" y="80" text-anchor="middle" font-size="14" fill="${theme.text}" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji'">
-    ${message}
+<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="GitHub Insights error" width="500" height="132" viewBox="0 0 500 132">
+  <title>GitHub Insights error</title>
+  <desc>${safeMessage}</desc>
+  <rect x="1" y="1" width="498" height="130" rx="14" fill="${theme.cardBackground}" stroke="#f85149" stroke-width="1.5"/>
+  <g transform="translate(250, 32)">
+    <circle cx="0" cy="0" r="16" fill="#f85149" opacity="0.12"/>
+    <g transform="translate(-10, -10) scale(1.25)">
+      <path fill="#f85149" d="M8 1.5a.75.75 0 0 1 .673.418l5.25 10.5a.75.75 0 0 1-1.346.672L8 3.933 3.423 13.09a.75.75 0 0 1-1.346-.672l5.25-10.5A.75.75 0 0 1 8 1.5ZM8 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z"/>
+    </g>
+  </g>
+  <text x="250" y="72" text-anchor="middle" font-size="16" font-weight="700" fill="#f85149" font-family="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" letter-spacing="0.2">Request failed</text>
+  <text x="250" y="96" text-anchor="middle" font-size="13" font-weight="500" fill="${theme.text}" font-family="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+    ${safeMessage}
   </text>
 </svg>
   `.trim();
