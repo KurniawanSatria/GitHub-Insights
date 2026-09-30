@@ -720,7 +720,7 @@ function renderStreakSection(
         
         <rect x="${round1(centerX - 18)}" y="14" width="36" height="36" rx="10" fill="${theme.accent}" opacity="0.12"/>
         <g transform="translate(${centerX}, 24)">
-          ${renderIcon("trophy", -10, 0, theme.iconColor, 20)}
+          ${renderIcon("trophy", -10, 0, theme.iconColor, 20, 24)}
         </g>
         
         <text x="${
