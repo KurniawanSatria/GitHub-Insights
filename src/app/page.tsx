@@ -844,9 +844,9 @@ export default function Home() {
                           fontSize: '11px',
                           fontWeight: isSelected ? 600 : 500,
                           color: isSelected ? 'var(--primary)' : 'var(--text-main)',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
+                          lineHeight: 1.35,
+                          minHeight: '30px',
+                          overflowWrap: 'break-word',
                         }}
                       >
                         {theme.name}
