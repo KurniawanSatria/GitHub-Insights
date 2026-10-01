@@ -21,7 +21,7 @@ function generateETag(content: string): string {
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const username = searchParams.get('username');
-  const themeName = searchParams.get('theme') || 'monochrome';
+  const themeName = searchParams.get('theme') || 'github_dark';
   const showGraph = searchParams.get('graph') !== 'false';
   const showLanguages = searchParams.get('languages') !== 'false';
   const showStreak = searchParams.get('streak') !== 'false';
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
   if (!username) {
     return new NextResponse(
-      generateErrorCard('Username is required', getTheme('monochrome')),
+      generateErrorCard('Username is required', getTheme('github_dark')),
       {
         status: 400,
         headers: {
@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
     const errorMessage = error instanceof Error ? error.message : 'Failed to generate stats';
     
     return new NextResponse(
-      generateErrorCard(errorMessage, getTheme('monochrome')),
+      generateErrorCard(errorMessage, getTheme('github_dark')),
       {
         status: 500,
         headers: {
@@ -151,24 +151,13 @@ function generateErrorCard(message: string, theme: ReturnType<typeof getTheme>):
     .replace(/"/g, '&quot;')
     .slice(0, 120);
   return `
-<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="GitHub Insights error" width="500" height="132" viewBox="0 0 500 132">
-  <title>GitHub Insights error</title>
-  <desc>${safeMessage}</desc>
-  <style>
-    .mi-err-title { animation: mi-errIn 0.9s ease-out both; }
-    .mi-err-msg { animation: mi-errFade 0.9s ease-in-out 0.3s both; }
-    .mi-err-bar { animation: mi-errBar 0.9s ease-out 0.2s both; transform-box: fill-box; transform-origin: center; }
-    @keyframes mi-errIn { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
-    @keyframes mi-errFade { 0% { opacity: 0; } 100% { opacity: 1; } }
-    @keyframes mi-errBar { 0% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
-    @media (prefers-reduced-motion: reduce) {
-      .mi-err-title, .mi-err-msg, .mi-err-bar { animation: none; }
-    }
-  </style>
-  <rect x="0.5" y="0.5" width="499" height="131" rx="8" fill="${theme.background}" stroke="${theme.border}" stroke-width="1"/>
-  <text class="mi-err-title" x="250" y="52" text-anchor="middle" font-size="16" font-weight="700" fill="${theme.title}" font-family="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" letter-spacing="-0.3">Request failed.</text>
-  <rect class="mi-err-bar" x="219" y="64" width="62" height="2" rx="1" fill="#f85149"/>
-  <text class="mi-err-msg" x="250" y="96" text-anchor="middle" font-size="11" font-weight="400" fill="${theme.textSecondary}" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" letter-spacing="1">
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="120" viewBox="0 0 500 120">
+  <rect x="0" y="0" width="500" height="120" rx="12" fill="${theme.background}"/>
+  <rect x="0" y="0" width="500" height="120" rx="12" fill="none" stroke="#f85149" stroke-width="2"/>
+  <text x="250" y="50" text-anchor="middle" font-size="18" font-weight="bold" fill="#f85149" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji'">
+    ⚠️ Error
+  </text>
+  <text x="250" y="80" text-anchor="middle" font-size="14" fill="${theme.text}" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji'">
     ${safeMessage}
   </text>
 </svg>

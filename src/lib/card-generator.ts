@@ -18,14 +18,7 @@ interface CardOptions {
 }
 
 const FONT_FAMILY =
-  "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
-
-const MONO_FONT =
-  "ui-monospace, SFMono-Regular, SFMono, Menlo, Consolas, monospace";
-
-const SECTION_GAP = 20;
-const CARD_RADIUS = 6;
-const OUTER_RADIUS = 8;
+  "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
 const ANIMATION_STYLE = `
   <style>
@@ -135,8 +128,26 @@ function getJoinedText(dateStr: string): string {
   return "recently";
 }
 
-function calculateGrade(stats: GitHubStats): { grade: string } {
-  return { grade: stats.rank };
+const GRADE_COLORS: Record<string, string> = {
+  'S': '#fbbf24',
+  'A+': '#10b981',
+  'A': '#34d399',
+  'A-': '#6ee7b7',
+  'B+': '#60a5fa',
+  'B': '#93c5fd',
+  'B-': '#a78bfa',
+  'C+': '#c4b5fd',
+  'C': '#9ca3af',
+};
+
+function getGradeColor(rank: string): string {
+  return GRADE_COLORS[rank] || '#9ca3af';
+}
+
+function calculateGrade(stats: GitHubStats): { grade: string; color: string } {
+  const grade = stats.rank;
+  const color = getGradeColor(grade);
+  return { grade, color };
 }
 
 function renderHeaderSection(
@@ -154,22 +165,19 @@ function renderHeaderSection(
   const { user, totalContributions, monthlyContributions } = stats;
   const rawName = user.name ? user.name.trim() : "";
   const rawLogin = user.login.trim();
-  const hasDistinctName =
-    rawName !== "" && rawName.toLowerCase() !== rawLogin.toLowerCase();
+  const hasDistinctName = rawName !== "" && rawName.toLowerCase() !== rawLogin.toLowerCase();
 
-  const displayName = truncateWords(rawName || rawLogin, 28).toUpperCase();
+  // Word-boundary truncation prevents overflow on long names/locations,
+  // full values stay available via <title> tooltips. No uppercase transform
+  // so the existing visual language is preserved.
+  const displayName = truncateWords(rawName || rawLogin, 32);
   const name = escapeHtml(displayName);
   const fullName = escapeHtml(rawName || rawLogin);
-  const login = escapeHtml(truncateText(rawLogin, 24));
+  const login = escapeHtml(truncateText(rawLogin, 28));
   const fullLogin = escapeHtml(rawLogin);
   const rawLocation = user.location ? user.location.trim() : "";
-  const location = rawLocation ? escapeHtml(truncateText(rawLocation, 30)) : "";
+  const location = rawLocation ? escapeHtml(truncateWords(rawLocation, 32)) : "";
   const fullLocation = rawLocation ? escapeHtml(rawLocation) : "";
-
-  const metaParts = [`@${rawLogin.toUpperCase()}`];
-  if (rawLocation) metaParts.push(truncateWords(rawLocation, 28).toUpperCase());
-  metaParts.push(`JOINED ${formatDateFull(stats.accountCreatedAt).toUpperCase()}`);
-  const metaLine = escapeHtml(metaParts.join("   ·   "));
 
   const contributionPeriodLabel = "the last 12 months";
 
@@ -223,65 +231,53 @@ function renderHeaderSection(
     ? `
       <g transform="translate(${cardWidth / 2}, 0)">
         <title>${fullName} (@${fullLogin})</title>
-        <text class="mi-name" x="0" y="0" text-anchor="middle" font-size="30" font-weight="800" fill="${
-          theme.title
-        }" font-family="${FONT_FAMILY}" letter-spacing="-0.5">
-          ${hasDistinctName ? name : `@${login.toUpperCase()}`}
-        </text>
-        <rect class="mi-underline mi-underline-center" x="-160" y="14" width="320" height="2" rx="1" fill="${
+        <text class="mi-name" x="0" y="0" text-anchor="middle" font-size="28" font-weight="700" fill="${
           theme.accent
-        }"/>
-        <text class="mi-meta" x="0" y="44" text-anchor="middle" font-size="11" font-weight="400" fill="${
-          theme.textSecondary
-        }" font-family="${MONO_FONT}" letter-spacing="2">
-          ${metaLine}
+        }" font-family="${FONT_FAMILY}" letter-spacing="0.5">
+          ${hasDistinctName ? name : `@${login}`}
         </text>
+        <rect class="mi-underline mi-underline-center" x="-80" y="12" width="160" height="2" rx="1" fill="${theme.accent}" opacity="0.6"/>
+        ${hasDistinctName ? `
+        <text class="mi-meta" x="0" y="36" text-anchor="middle" font-size="14" font-weight="400" fill="${
+          theme.textSecondary
+        }" font-family="${FONT_FAMILY}" letter-spacing="0.3">
+          @${login}
+        </text>` : ""}
       </g>
   `
     : "";
 
-  const profileHeight = showProfile ? 64 : 0;
+  const profileHeight = showProfile ? (hasDistinctName ? 56 : 34) : 0;
   const repoCount = user.repositories.totalCount;
 
   const summaryRows = showSummary
     ? [
         {
           icon: "fire",
-          color: theme.iconColor,
-          text: `${totalContributions.toLocaleString()} contribution${
-            totalContributions === 1 ? "" : "s"
-          } in ${contributionPeriodLabel}`,
+          color: "#ff6b35",
+          text: `${totalContributions.toLocaleString()} contribution${totalContributions === 1 ? "" : "s"} in ${contributionPeriodLabel}`,
           fullText: `${totalContributions.toLocaleString()} contributions in the last 12 months`,
         },
         {
           icon: "repo",
-          color: theme.iconColor,
-          text: `${repoCount.toLocaleString()} public ${
-            repoCount === 1 ? "repository" : "repositories"
-          }`,
+          color: theme.accent,
+          text: `${repoCount.toLocaleString()} public ${repoCount === 1 ? "repository" : "repositories"}`,
           fullText: `${repoCount.toLocaleString()} public repositories`,
         },
         {
           icon: "calendar",
-          color: theme.textSecondary,
+          color: "#9ca3af",
           text: `Joined GitHub ${getJoinedText(stats.accountCreatedAt)}`,
           fullText: `Joined GitHub ${formatDateFull(stats.accountCreatedAt)}`,
         },
         ...(location
-          ? [
-              {
-                icon: "pin",
-                color: theme.iconColor,
-                text: location,
-                fullText: fullLocation,
-              },
-            ]
+          ? [{ icon: "pin", color: "#10b981", text: location, fullText: fullLocation }]
           : []),
       ]
     : [];
 
   const summaryHeight = showSummary ? summaryRows.length * 32 : 0;
-  const headerChartHeight = showHeader ? 124 : 0;
+  const headerChartHeight = showHeader ? 120 : 0;
 
   const showBothSummaryAndHeader = showSummary && showHeader;
   const summaryStartY = profileHeight + (showProfile ? 32 : 0);
@@ -293,7 +289,7 @@ function renderHeaderSection(
           .map(
             (row, index) => `
         <g transform="translate(0, ${index * 32})">
-          <title>${row.fullText}</title>
+          <title>${escapeHtml(row.fullText)}</title>
           ${renderIcon(
             row.icon as "fire" | "repo" | "calendar" | "pin",
             0,
@@ -301,9 +297,9 @@ function renderHeaderSection(
             row.color,
             18
           )}
-          <text x="28" y="13" font-size="14" font-weight="500" fill="${
+          <text x="28" y="13" font-size="14" fill="${
             theme.text
-          }" font-family="${FONT_FAMILY}" letter-spacing="0.2">
+          }" font-family="${FONT_FAMILY}" letter-spacing="0.3">
             ${row.text}
           </text>
         </g>
@@ -323,32 +319,24 @@ function renderHeaderSection(
       }, ${summaryStartY})">
         <text x="${
           graphWidth / 2
-        }" y="-8" text-anchor="middle" font-size="11" font-weight="400" fill="${
+        }" y="-8" text-anchor="middle" font-size="12" font-weight="600" fill="${
         theme.textSecondary
-      }" font-family="${MONO_FONT}" letter-spacing="2">
-          MONTHLY CONTRIBUTIONS
+      }" font-family="${FONT_FAMILY}" letter-spacing="0.3">
+          Monthly Contributions (Last 12 Months)
         </text>
-
-        <line x1="0" y1="0" x2="${graphWidth}" y2="0" stroke="${
-        theme.border
-      }" stroke-width="1" stroke-dasharray="4,3" opacity="0.35"/>
-        <line x1="0" y1="${graphHeight / 2}" x2="${graphWidth}" y2="${
-        graphHeight / 2
-      }" stroke="${
-        theme.border
-      }" stroke-width="1" stroke-dasharray="4,3" opacity="0.35"/>
-        <line x1="0" y1="${graphHeight}" x2="${graphWidth}" y2="${graphHeight}" stroke="${
-        theme.border
-      }" stroke-width="1" opacity="0.6"/>
+        
+        <line x1="0" y1="0" x2="${graphWidth}" y2="0" stroke="${theme.border}" stroke-width="1" stroke-dasharray="4,3" opacity="0.35"/>
+        <line x1="0" y1="${graphHeight / 2}" x2="${graphWidth}" y2="${graphHeight / 2}" stroke="${theme.border}" stroke-width="1" stroke-dasharray="4,3" opacity="0.35"/>
+        <line x1="0" y1="${graphHeight}" x2="${graphWidth}" y2="${graphHeight}" stroke="${theme.border}" stroke-width="1" opacity="0.6"/>
         
         <g transform="translate(${graphWidth + 10}, 0)">
-          <text y="10" font-size="10" font-weight="500" fill="${
+          <text y="10" font-size="9" fill="${
             theme.textSecondary
           }" font-family="${FONT_FAMILY}">${maxCount}</text>
-          <text y="${graphHeight / 2 + 4}" font-size="10" font-weight="500" fill="${
+          <text y="${graphHeight / 2 + 4}" font-size="9" fill="${
         theme.textSecondary
       }" font-family="${FONT_FAMILY}">${Math.round(maxCount / 2)}</text>
-          <text y="${graphHeight}" font-size="10" font-weight="500" fill="${
+          <text y="${graphHeight}" font-size="9" fill="${
         theme.textSecondary
       }" font-family="${FONT_FAMILY}">0</text>
         </g>
@@ -357,10 +345,10 @@ function renderHeaderSection(
           <linearGradient id="${headerGradientId}" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" style="stop-color:${
               theme.accent
-            };stop-opacity:0.28" />
+            };stop-opacity:0.5" />
             <stop offset="100%" style="stop-color:${
               theme.accent
-            };stop-opacity:0.02" />
+            };stop-opacity:0.05" />
           </linearGradient>
         </defs>
         
@@ -370,15 +358,12 @@ function renderHeaderSection(
       }" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
         ${dotsSvg}
         
-        <g transform="translate(0, ${graphHeight + 16})">
+        <g transform="translate(0, ${graphHeight + 14})">
           ${monthlyData
             .map((data, originalIdx) => {
-              if (originalIdx % 4 !== 0 && originalIdx !== monthlyData.length - 1)
-                return "";
-              const x = round1(
-                (originalIdx / Math.max(monthlyData.length - 1, 1)) * graphWidth
-              );
-              return `<text x="${x}" y="0" font-size="10" font-weight="500" fill="${
+              if (originalIdx % 4 !== 0 && originalIdx !== monthlyData.length - 1) return "";
+              const x = round1((originalIdx / Math.max(monthlyData.length - 1, 1)) * graphWidth);
+              return `<text x="${x}" y="0" font-size="9" fill="${
                 theme.textSecondary
               }" font-family="${FONT_FAMILY}" text-anchor="middle">${
                 data.label
@@ -395,7 +380,7 @@ function renderHeaderSection(
     : summaryHeight + headerChartHeight;
 
   const totalHeight =
-    profileHeight + (showProfile ? 32 : 0) + contentHeight + 12;
+    profileHeight + (showProfile ? 32 : 0) + contentHeight + 10;
 
   const svg = `
     <g transform="translate(0, ${startY})">
@@ -416,86 +401,91 @@ function renderStatsCard(
 ): { svg: string; height: number } {
   const { totalStars, totalContributions, totalPRs, totalIssues, contributedRepos } =
     stats;
-  const { grade } = calculateGrade(stats);
+  const { grade, color: gradeColor } = calculateGrade(stats);
 
   const statItems = [
     {
       icon: "star" as const,
       label: "Total Stars Earned",
       value: totalStars,
-      color: theme.iconColor,
+      color: "#fbbf24",
     },
     {
       icon: "commit" as const,
       label: "Contributions (12mo)",
       value: totalContributions,
-      color: theme.iconColor,
+      color: "#34d399",
     },
     {
       icon: "pr" as const,
       label: "Pull Requests (12mo)",
       value: totalPRs,
-      color: theme.iconColor,
+      color: "#a78bfa",
     },
     {
       icon: "issue" as const,
       label: "Issues (12mo)",
       value: totalIssues,
-      color: theme.iconColor,
+      color: "#f472b6",
     },
     {
       icon: "fork" as const,
       label: "Contributed To (12mo)",
       value: contributedRepos,
-      color: theme.iconColor,
+      color: "#60a5fa",
     },
   ];
 
   const statsSvgParts = statItems.map((item, index) => {
-    const y = index * 28;
+    const y = index * 27;
     return `<g transform="translate(0, ${y})"><title>${item.label}: ${item.value.toLocaleString()}</title>${renderIcon(
       item.icon,
       0,
       0,
       item.color,
       16
-    )}<text x="26" y="12" font-size="13" font-weight="500" fill="${
+    )}<text x="26" y="12" font-size="13" fill="${
       theme.textSecondary
-    }" font-family="${FONT_FAMILY}" letter-spacing="0.2">${
+    }" font-family="${FONT_FAMILY}" letter-spacing="0.3">${
       item.label
-    }</text><text x="252" y="12" font-size="14" font-weight="700" fill="${
+    }</text><text x="230" y="12" font-size="14" font-weight="600" fill="${
       theme.text
-    }" font-family="${FONT_FAMILY}" text-anchor="end" letter-spacing="0.1">${item.value.toLocaleString()}</text></g>`;
+    }" font-family="${FONT_FAMILY}" text-anchor="end" letter-spacing="0.2">${item.value.toLocaleString()}</text></g>`;
   });
 
   const svg = `<g class="mi-card mi-d1" transform="translate(${startX}, ${startY})">
-      <rect x="0" y="0" width="377" height="204" rx="${CARD_RADIUS}" fill="${
+      <rect x="0" y="0" width="377" height="200" rx="14" fill="${
         theme.cardBackground
       }" stroke="${theme.border}" stroke-width="1"/>
-      <g transform="translate(24, 26)"><text x="0" y="0" font-size="18" font-weight="700" fill="${
+      <g transform="translate(24, 28)">${renderIcon(
+        "activity",
+        0,
+        -1,
+        theme.accent,
+        18
+      )}<text x="28" y="13" font-size="16" font-weight="600" fill="${
     theme.title
-  }" font-family="${FONT_FAMILY}" letter-spacing="-0.5">GitHub Stats.</text>
-      <rect class="mi-underline mi-underline-left" x="0" y="8" width="72" height="2" rx="1" fill="${theme.accent}"/></g>
-      <g transform="translate(24, 66)">${statsSvgParts.join("")}</g>
-      <g transform="translate(290, 62)">
-        <circle cx="36" cy="36" r="44" fill="${theme.accent}" opacity="0.06"/>
-        <circle cx="36" cy="36" r="38" fill="${
+  }" font-family="${FONT_FAMILY}" letter-spacing="0.3">GitHub Stats</text></g>
+      <rect class="mi-underline mi-underline-left" x="24" y="44" width="72" height="2" rx="1" fill="${theme.accent}" opacity="0.7"/>
+      <g transform="translate(24, 60)">${statsSvgParts.join("")}</g>
+      <g transform="translate(290, 58)">
+        <circle cx="36" cy="36" r="40" fill="${
           theme.background
-        }" stroke="${theme.accent}" stroke-width="2"/>
-        <circle cx="36" cy="36" r="30" fill="${theme.accent}" opacity="0.10"/>
-        <text x="36" y="45" text-anchor="middle" font-size="26" font-weight="800" fill="${theme.text}" font-family="${FONT_FAMILY}" letter-spacing="-0.3">${grade}</text>
+        }" stroke="${gradeColor}" stroke-width="2.5"/>
+        <circle cx="36" cy="36" r="32" fill="${gradeColor}" opacity="0.12"/>
+        <text x="36" y="44" text-anchor="middle" font-size="26" font-weight="700" fill="${gradeColor}" font-family="${FONT_FAMILY}" letter-spacing="0.5">${grade}</text>
       </g>
-      <g transform="translate(294, 150)">
-        <rect x="0" y="0" width="64" height="22" rx="11" fill="${
+      <g transform="translate(296, 146)">
+        <rect x="0" y="0" width="60" height="20" rx="6" fill="${
           theme.background
-        }" stroke="${theme.border}" stroke-width="1"/>
-        <text x="32" y="15" text-anchor="middle" font-size="10" font-weight="400" fill="${
+        }" stroke="${theme.border}" stroke-width="1" stroke-opacity="0.6"/>
+        <text x="30" y="14" text-anchor="middle" font-size="10" font-weight="600" fill="${
           theme.textSecondary
-        }" font-family="${MONO_FONT}" letter-spacing="2">RANK</text>
+        }" font-family="${FONT_FAMILY}" letter-spacing="0.5">RANK</text>
       </g>
     </g>`;
 
-  return { svg, height: 222 };
+  return { svg, height: 218 };
 }
 
 function renderLanguagesCard(
@@ -535,11 +525,7 @@ function renderLanguagesCard(
     const width = (normalizedPercentage / 100) * barWidth;
     const actualWidth =
       index === validLangs.length - 1 ? barWidth - currentX : width;
-    segments.push({
-      x: round1(currentX),
-      width: round1(actualWidth),
-      color: lang.color,
-    });
+    segments.push({ x: round1(currentX), width: round1(actualWidth), color: lang.color });
     currentX += actualWidth;
   }
 
@@ -555,7 +541,7 @@ function renderLanguagesCard(
   for (let i = 0; i < topLangs.length; i++) {
     const lang = topLangs[i];
     const colIndex = Math.floor(i / 2);
-    const y = colIndex * 28;
+    const y = colIndex * 27;
     const fullLangName = lang.name;
     const shortName = truncateText(lang.name, 14);
     const escapedName = escapeHtml(shortName);
@@ -564,41 +550,47 @@ function renderLanguagesCard(
     if (i % 2 === 0) {
       leftLangsSvg += `<g transform="translate(0, ${y})"><title>${escapedFull} ${pct}%</title><circle cx="6" cy="7" r="5" fill="${
         lang.color
-      }"/><text x="20" y="11" font-size="12" font-weight="600" fill="${
+      }"/><text x="20" y="11" font-size="12" font-weight="500" fill="${
         theme.text
-      }" font-family="${FONT_FAMILY}" letter-spacing="0.2">${escapedName}</text><text x="155" y="11" font-size="12" font-weight="500" fill="${
+      }" font-family="${FONT_FAMILY}" letter-spacing="0.3">${escapedName}</text><text x="155" y="11" font-size="12" fill="${
         theme.textSecondary
-      }" font-family="${FONT_FAMILY}" text-anchor="end" letter-spacing="0.1">${pct}%</text></g>`;
+      }" font-family="${FONT_FAMILY}" text-anchor="end" letter-spacing="0.2">${pct}%</text></g>`;
     } else {
       rightLangsSvg += `<g transform="translate(175, ${y})"><title>${escapedFull} ${pct}%</title><circle cx="6" cy="7" r="5" fill="${
         lang.color
-      }"/><text x="20" y="11" font-size="12" font-weight="600" fill="${
+      }"/><text x="20" y="11" font-size="12" font-weight="500" fill="${
         theme.text
-      }" font-family="${FONT_FAMILY}" letter-spacing="0.2">${escapedName}</text><text x="155" y="11" font-size="12" font-weight="500" fill="${
+      }" font-family="${FONT_FAMILY}" letter-spacing="0.3">${escapedName}</text><text x="155" y="11" font-size="12" fill="${
         theme.textSecondary
-      }" font-family="${FONT_FAMILY}" text-anchor="end" letter-spacing="0.1">${pct}%</text></g>`;
+      }" font-family="${FONT_FAMILY}" text-anchor="end" letter-spacing="0.2">${pct}%</text></g>`;
     }
   }
 
   const svg = `<g class="mi-card mi-d2" transform="translate(${startX}, ${startY})">
-      <rect x="0" y="0" width="377" height="204" rx="${CARD_RADIUS}" fill="${
+      <rect x="0" y="0" width="377" height="200" rx="14" fill="${
         theme.cardBackground
       }" stroke="${theme.border}" stroke-width="1"/>
-      <g transform="translate(24, 26)"><text x="0" y="0" font-size="18" font-weight="700" fill="${
+      <g transform="translate(24, 28)">${renderIcon(
+        "code",
+        0,
+        -1,
+        theme.accent,
+        18
+      )}<text x="28" y="13" font-size="16" font-weight="600" fill="${
     theme.title
-  }" font-family="${FONT_FAMILY}" letter-spacing="-0.5">Most Used Languages.</text>
-      <rect class="mi-underline mi-underline-left" x="0" y="8" width="72" height="2" rx="1" fill="${theme.accent}"/></g>
-      <g transform="translate(24, 62)">
+  }" font-family="${FONT_FAMILY}" letter-spacing="0.3">Most Used Languages</text></g>
+      <rect class="mi-underline mi-underline-left" x="24" y="44" width="72" height="2" rx="1" fill="${theme.accent}" opacity="0.7"/>
+      <g transform="translate(24, 60)">
         <defs><clipPath id="${clipId}"><rect x="0" y="0" width="${barWidth}" height="${barHeight}" rx="${borderRadius}"/></clipPath></defs>
         <rect x="0" y="0" width="${barWidth}" height="${barHeight}" rx="${borderRadius}" fill="${
     theme.background
   }"/>
         <g class="mi-bar" clip-path="url(#${clipId})">${segmentsSvg}</g>
       </g>
-      <g transform="translate(24, 92)">${leftLangsSvg}${rightLangsSvg}</g>
+      <g transform="translate(24, 88)">${leftLangsSvg}${rightLangsSvg}</g>
     </g>`;
 
-  return { svg, height: 222 };
+  return { svg, height: 218 };
 }
 
 function renderStreakSection(
@@ -618,7 +610,7 @@ function renderStreakSection(
   const strokeWidth = 5;
   const innerCardWidth = cardWidth - 80;
   const cardWidth3 = round1((innerCardWidth - 32) / 3);
-  const centerX = round1(cardWidth3 / 2);
+
   const progress = Math.min(currentStreak.count / 30, 1);
   const dashArray = round1(2 * Math.PI * circleRadius);
   const dashOffset = round1(2 * Math.PI * circleRadius * (1 - progress));
@@ -637,48 +629,48 @@ function renderStreakSection(
     <g class="mi-card mi-d3" transform="translate(40, ${startY})">
       <g transform="translate(0, 0)">
         <title>Total contributions: ${totalContributionsAllTime.toLocaleString()}</title>
-        <rect x="0" y="0" width="${cardWidth3}" height="144" rx="${CARD_RADIUS}" fill="${
+        <rect x="0" y="0" width="${cardWidth3}" height="140" rx="14" fill="${
     theme.cardBackground
-  }" stroke="${theme.border}" stroke-width="1"/>
+  }" stroke="${theme.border}" stroke-width="1" stroke-opacity="0.85"/>
         
-        <rect x="${round1(centerX - 18)}" y="14" width="36" height="36" rx="10" fill="${theme.accent}" opacity="0.12"/>
-        <g transform="translate(${centerX}, 24)">
-          ${renderIcon("contribution", -10, 0, theme.iconColor, 20)}
+        <rect x="${round1(cardWidth3 / 2 - 18)}" y="14" width="36" height="36" rx="10" fill="${theme.accent}" opacity="0.12"/>
+        <g transform="translate(${round1(cardWidth3 / 2)}, 24)">
+          ${renderIcon("contribution", -10, 0, theme.accent, 20)}
         </g>
         
         <text x="${
-          centerX
-        }" y="76" text-anchor="middle" font-size="26" font-weight="800" fill="${
-    theme.text
-  }" font-family="${FONT_FAMILY}" letter-spacing="-0.5">
+          round1(cardWidth3 / 2)
+        }" y="74" text-anchor="middle" font-size="26" font-weight="700" fill="${
+    theme.accent
+  }" font-family="${FONT_FAMILY}" letter-spacing="-0.2">
           ${totalContributionsAllTime.toLocaleString()}
         </text>
         <text x="${
-          centerX
-        }" y="100" text-anchor="middle" font-size="10" font-weight="400" fill="${
+          round1(cardWidth3 / 2)
+        }" y="98" text-anchor="middle" font-size="12" font-weight="600" fill="${
     theme.textSecondary
-  }" font-family="${MONO_FONT}" letter-spacing="2">
-          TOTAL
+  }" font-family="${FONT_FAMILY}" letter-spacing="0.3">
+          Total Contributions
         </text>
         <text x="${
-          centerX
-        }" y="121" text-anchor="middle" font-size="11" font-weight="500" fill="${
+          round1(cardWidth3 / 2)
+        }" y="118" text-anchor="middle" font-size="10" fill="${
     theme.textSecondary
-  }" font-family="${FONT_FAMILY}" opacity="0.9" letter-spacing="0.2">
+  }" font-family="${FONT_FAMILY}" opacity="0.75" letter-spacing="0.2">
           ${joinedRange}
         </text>
       </g>
       
       <g transform="translate(${round1(cardWidth3 + 16)}, 0)">
         <title>Current streak: ${currentStreak.count} days</title>
-        <rect x="0" y="0" width="${cardWidth3}" height="144" rx="${CARD_RADIUS}" fill="${
+        <rect x="0" y="0" width="${cardWidth3}" height="140" rx="14" fill="${
     theme.cardBackground
-  }" stroke="${theme.border}" stroke-width="1"/>
+  }" stroke="${theme.border}" stroke-width="1" stroke-opacity="0.85"/>
         
-        <g transform="translate(${centerX}, 60)">
+        <g transform="translate(${round1(cardWidth3 / 2)}, 58)">
           <circle cx="0" cy="0" r="${circleRadius}" fill="none" stroke="${
     theme.border
-  }" stroke-width="${strokeWidth}" opacity="0.35"/>
+  }" stroke-width="${strokeWidth}" opacity="0.3"/>
           <circle cx="0" cy="0" r="${circleRadius}" fill="none" stroke="${
     theme.accent
   }" stroke-width="${strokeWidth}" 
@@ -687,68 +679,68 @@ function renderStreakSection(
                   transform="rotate(-90)"
                   stroke-linecap="round"/>
           <g transform="translate(-10, ${-circleRadius - 10})">
-            ${renderIcon("fire", 0, 0, theme.iconColor, 20)}
+            ${renderIcon("fire", 0, 0, "#ff6b35", 20)}
           </g>
-          <text x="0" y="8" text-anchor="middle" font-size="22" font-weight="800" fill="${
+          <text x="0" y="8" text-anchor="middle" font-size="22" font-weight="700" fill="${
             theme.text
-          }" font-family="${FONT_FAMILY}" letter-spacing="-0.3">
+          }" font-family="${FONT_FAMILY}" letter-spacing="-0.2">
             ${currentStreak.count}
           </text>
         </g>
         
         <text x="${
-          centerX
-        }" y="112" text-anchor="middle" font-size="10" font-weight="400" fill="${
+          round1(cardWidth3 / 2)
+        }" y="108" text-anchor="middle" font-size="12" font-weight="600" fill="${
     theme.textSecondary
-  }" font-family="${MONO_FONT}" letter-spacing="2">
-          CURRENT STREAK
+  }" font-family="${FONT_FAMILY}" letter-spacing="0.3">
+          Current Streak
         </text>
         <text x="${
-          centerX
-        }" y="130" text-anchor="middle" font-size="11" font-weight="500" fill="${
+          round1(cardWidth3 / 2)
+        }" y="126" text-anchor="middle" font-size="10" fill="${
     theme.textSecondary
-  }" font-family="${FONT_FAMILY}" opacity="0.9" letter-spacing="0.2">
+  }" font-family="${FONT_FAMILY}" opacity="0.75" letter-spacing="0.2">
           ${currentRange}
         </text>
       </g>
       
       <g transform="translate(${round1((cardWidth3 + 16) * 2)}, 0)">
         <title>Longest streak: ${longestStreak.count} days</title>
-        <rect x="0" y="0" width="${cardWidth3}" height="144" rx="${CARD_RADIUS}" fill="${
+        <rect x="0" y="0" width="${cardWidth3}" height="140" rx="14" fill="${
     theme.cardBackground
-  }" stroke="${theme.border}" stroke-width="1"/>
+  }" stroke="${theme.border}" stroke-width="1" stroke-opacity="0.85"/>
         
-        <rect x="${round1(centerX - 18)}" y="14" width="36" height="36" rx="10" fill="${theme.accent}" opacity="0.12"/>
-        <g transform="translate(${centerX}, 24)">
-          ${renderIcon("trophy", -10, 0, theme.iconColor, 20, 24)}
+        <rect x="${round1(cardWidth3 / 2 - 18)}" y="14" width="36" height="36" rx="10" fill="${theme.accentSecondary}" opacity="0.12"/>
+        <g transform="translate(${round1(cardWidth3 / 2)}, 24)">
+          ${renderIcon("trophy", -10, 0, theme.accentSecondary, 20)}
         </g>
         
         <text x="${
-          centerX
-        }" y="76" text-anchor="middle" font-size="26" font-weight="800" fill="${
-    theme.text
-  }" font-family="${FONT_FAMILY}" letter-spacing="-0.5">
+          round1(cardWidth3 / 2)
+        }" y="74" text-anchor="middle" font-size="26" font-weight="700" fill="${
+    theme.accentSecondary
+  }" font-family="${FONT_FAMILY}" letter-spacing="-0.2">
           ${longestStreak.count}
         </text>
         <text x="${
-          centerX
-        }" y="100" text-anchor="middle" font-size="10" font-weight="400" fill="${
+          round1(cardWidth3 / 2)
+        }" y="98" text-anchor="middle" font-size="12" font-weight="600" fill="${
     theme.textSecondary
-  }" font-family="${MONO_FONT}" letter-spacing="2">
-          LONGEST STREAK
+  }" font-family="${FONT_FAMILY}" letter-spacing="0.3">
+          Longest Streak
         </text>
         <text x="${
-          centerX
-        }" y="121" text-anchor="middle" font-size="11" font-weight="500" fill="${
+          round1(cardWidth3 / 2)
+        }" y="118" text-anchor="middle" font-size="10" fill="${
     theme.textSecondary
-  }" font-family="${FONT_FAMILY}" opacity="0.9" letter-spacing="0.2">
+  }" font-family="${FONT_FAMILY}" opacity="0.75" letter-spacing="0.2">
           ${longestRange}
         </text>
       </g>
     </g>
   `;
 
-  return { svg, height: 164 };
+  return { svg, height: 160 };
 }
 
 function renderContributionLineGraph(
@@ -819,7 +811,7 @@ function renderContributionLineGraph(
 
     if (i % 7 === 0 || i === lastIdx) {
       const date = new Date(day.date);
-      xAxisLabelsSvg += `<text x="${x}" y="0" text-anchor="middle" font-size="10" font-weight="500" fill="${theme.textSecondary}" font-family="${FONT_FAMILY}" letter-spacing="0.2">${date.getDate()}</text>`;
+      xAxisLabelsSvg += `<text x="${x}" y="0" text-anchor="middle" font-size="10" fill="${theme.textSecondary}" font-family="${FONT_FAMILY}" letter-spacing="0.2">${date.getDate()}</text>`;
     }
   }
 
@@ -827,45 +819,50 @@ function renderContributionLineGraph(
 
   const svg = `<g class="mi-card mi-d4" transform="translate(40, ${startY})">
       <rect x="0" y="0" width="${innerWidth}" height="${
-    graphHeight + 84
-  }" rx="${CARD_RADIUS}" fill="${theme.cardBackground}" stroke="${
+    graphHeight + 80
+  }" rx="14" fill="${theme.cardBackground}" stroke="${
     theme.border
   }" stroke-width="1"/>
-      <g transform="translate(24, 26)"><text x="0" y="0" font-size="18" font-weight="700" fill="${
+      <g transform="translate(24, 26)">${renderIcon(
+        "history",
+        0,
+        -1,
+        theme.accent,
+        18
+      )}<text x="28" y="13" font-size="15" font-weight="600" fill="${
     theme.title
-  }" font-family="${FONT_FAMILY}" letter-spacing="-0.5">Contribution Activity.</text>
-      <rect class="mi-underline mi-underline-left" x="0" y="8" width="72" height="2" rx="1" fill="${theme.accent}"/>
-      <text x="0" y="30" font-size="10" font-weight="400" fill="${
+  }" font-family="${FONT_FAMILY}" letter-spacing="0.3">Contribution Activity</text><text x="28" y="34" font-size="12" fill="${
     theme.textSecondary
-  }" font-family="${MONO_FONT}" letter-spacing="2">DAILY · ${escapeHtml(monthLabel.toUpperCase())}</text></g>
-      <g transform="translate(36, 70)">
-        <text x="0" y="5" font-size="10" font-weight="500" fill="${
+  }" font-family="${FONT_FAMILY}" letter-spacing="0.2">Daily contributions · ${monthLabel}</text></g>
+      <rect class="mi-underline mi-underline-left" x="24" y="70" width="72" height="2" rx="1" fill="${theme.accent}" opacity="0.7"/>
+      <g transform="translate(36, 78)">
+        <text x="0" y="5" font-size="10" fill="${
           theme.textSecondary
         }" text-anchor="end" font-family="${FONT_FAMILY}" letter-spacing="0.2">${maxCount}</text>
-        <text x="0" y="${graphHeight / 2 + 2}" font-size="10" font-weight="500" fill="${
+        <text x="0" y="${graphHeight / 2 + 2}" font-size="10" fill="${
     theme.textSecondary
   }" text-anchor="end" font-family="${FONT_FAMILY}" letter-spacing="0.2">${Math.round(
     maxCount / 2
   )}</text>
-        <text x="0" y="${graphHeight - 3}" font-size="10" font-weight="500" fill="${
+        <text x="0" y="${graphHeight - 3}" font-size="10" fill="${
     theme.textSecondary
   }" text-anchor="end" font-family="${FONT_FAMILY}" letter-spacing="0.2">0</text>
         <line x1="10" y1="0" x2="${graphWidth + 12}" y2="0" stroke="${
     theme.border
-  }" stroke-width="1" stroke-dasharray="4,3" opacity="0.35"/>
+  }" stroke-width="0.5" stroke-dasharray="4,2" opacity="0.4"/>
         <line x1="10" y1="${graphHeight / 2}" x2="${graphWidth + 12}" y2="${
     graphHeight / 2
   }" stroke="${
     theme.border
-  }" stroke-width="1" stroke-dasharray="4,3" opacity="0.35"/>
+  }" stroke-width="0.5" stroke-dasharray="4,2" opacity="0.4"/>
         <line x1="10" y1="${graphHeight}" x2="${
     graphWidth + 12
-  }" y2="${graphHeight}" stroke="${theme.border}" stroke-width="1" opacity="0.6"/>
+  }" y2="${graphHeight}" stroke="${theme.border}" stroke-width="0.5"/>
       </g>
-      <g transform="translate(52, 70)">
+      <g transform="translate(52, 78)">
         <defs><linearGradient id="${graphGradientId}" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:${
           theme.accent
-        };stop-opacity:0.25"/><stop offset="100%" style="stop-color:${
+        };stop-opacity:0.3"/><stop offset="100%" style="stop-color:${
     theme.accent
   };stop-opacity:0.02"/></linearGradient></defs>
         <path d="${linePath} L ${graphWidth} ${graphHeight} L 0 ${graphHeight} Z" fill="url(#${graphGradientId})"/>
@@ -874,10 +871,10 @@ function renderContributionLineGraph(
   }" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
         ${dataPointsSvg}
       </g>
-      <g transform="translate(52, ${graphHeight + 82})">${xAxisLabelsSvg}</g>
+      <g transform="translate(52, ${graphHeight + 88})">${xAxisLabelsSvg}</g>
     </g>`;
 
-  return { svg, height: graphHeight + 102 };
+  return { svg, height: graphHeight + 98 };
 }
 
 export function generateInsightCard(
@@ -887,14 +884,16 @@ export function generateInsightCard(
   const { theme } = options;
   const cardWidth = 850;
   const uid = getCardUid(stats, theme, options);
-  let currentY = 44;
+  const cardBgId = `cardBg-${uid}`;
+  const borderId = `border-${uid}`;
+  let currentY = 36;
 
   const headerSection = renderHeaderSection(stats, theme, currentY, cardWidth, {
     showProfile: options.showProfile,
     showSummary: options.showSummary,
     showHeader: options.showHeader,
   }, uid);
-  currentY += headerSection.height + (headerSection.height > 0 ? SECTION_GAP : 0);
+  currentY += headerSection.height + (headerSection.height > 0 ? 3 : 0);
 
   const showStats = options.showStats !== false;
   const showLanguages = options.showLanguages !== false;
@@ -917,13 +916,13 @@ export function generateInsightCard(
     : { svg: "", height: 0 };
 
   const statsAndLangsHeight = Math.max(statsCard.height, languagesCard.height);
-  currentY += statsAndLangsHeight + (statsAndLangsHeight > 0 ? SECTION_GAP : 0);
+  currentY += statsAndLangsHeight + (statsAndLangsHeight > 0 ? 3 : 0);
 
   const streakSection =
     options.showStreak !== false
       ? renderStreakSection(stats, theme, currentY, cardWidth)
       : { svg: "", height: 0 };
-  currentY += streakSection.height + (streakSection.height > 0 ? SECTION_GAP : 0);
+  currentY += streakSection.height + (streakSection.height > 0 ? 3 : 0);
 
   const graphSection =
     options.showGraph !== false
@@ -931,24 +930,30 @@ export function generateInsightCard(
       : { svg: "", height: 0 };
   currentY += graphSection.height;
 
-  const cardHeight = currentY + 32;
+  const cardHeight = currentY + 28;
   const safeLogin = escapeHtml(stats.user.login);
   const summaryDesc = `${stats.totalContributions} contributions in the last year, ${stats.totalStars} stars, ${stats.currentStreak.count} day streak. Rank ${stats.rank}.`;
 
   const svg = `
-<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="GitHub Insights for @${safeLogin}" width="${cardWidth}" height="${cardHeight}" viewBox="0 0 ${cardWidth} ${cardHeight}">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" role="img" aria-label="GitHub Insights for @${safeLogin}" width="${cardWidth}" height="${cardHeight}" viewBox="0 0 ${cardWidth} ${cardHeight}">
   <title>GitHub Insights for @${safeLogin}</title>
   <desc>${escapeHtml(summaryDesc)}</desc>
   ${ANIMATION_STYLE}
-  <rect x="0.5" y="0.5" width="${cardWidth - 1}" height="${
-    cardHeight - 1
-  }" rx="${OUTER_RADIUS}" fill="${theme.background}" stroke="${theme.border}" stroke-width="1"/>
-  <g opacity="0.6">
-    <rect x="20" y="20" width="22" height="2" fill="${theme.accent}"/>
-    <rect x="20" y="20" width="2" height="22" fill="${theme.accent}"/>
-    <rect x="${cardWidth - 42}" y="20" width="22" height="2" fill="${theme.accent}"/>
-    <rect x="${cardWidth - 22}" y="20" width="2" height="22" fill="${theme.accent}"/>
-  </g>
+  <defs>
+    <linearGradient id="${cardBgId}" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:${theme.background}" />
+      <stop offset="100%" style="stop-color:${theme.cardBackground};stop-opacity:0.92" />
+    </linearGradient>
+    <linearGradient id="${borderId}" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:${theme.accent}" />
+      <stop offset="50%" style="stop-color:${theme.accentSecondary}" />
+      <stop offset="100%" style="stop-color:${theme.accent}" />
+    </linearGradient>
+  </defs>
+  
+  <rect x="1" y="1" width="${cardWidth - 2}" height="${
+    cardHeight - 2
+  }" rx="15" fill="url(#${cardBgId})" stroke="url(#${borderId})" stroke-width="2"/>
   
   ${headerSection.svg}
   ${statsCard.svg}
